@@ -7,6 +7,7 @@ import { Table, Pagination, Dropdown, Modal, Button , Form  } from "react-bootst
 import { ToastContainer, toast } from "react-toastify";
 
 const TrainManagement = () => {
+  const [token , setToken] = useState("")
   const [trains, setTrains] = useState([]);
   const [schedules, setSchedules] = useState([]);
 
@@ -40,6 +41,7 @@ const TrainManagement = () => {
   }
 
   useEffect(() => {
+    setToken(localStorage.getItem("token"))
     getTrains();
     getSchedules()
   }, []);
@@ -59,7 +61,9 @@ const TrainManagement = () => {
 
   const handleCreateTrain = async ()=>{
     try {
-      const res = await getAxiosInstance().post(Trains.create,trainInfo);
+      const res = await getAxiosInstance().post(Trains.create,trainInfo,{
+        headers: { Authorization: `bearer ${token}` },
+      });
       setTrainInfo({
         trainName: "",
         luxurySeatCount: 0,
