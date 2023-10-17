@@ -38,5 +38,7 @@ export const Trains = {
 
 export const Schedules = {
   getAll: "api/Schedule",
-  create: "/api/TrainSchedule",
+  create: "/api/Schedule",
+  update: "/api/Schedule",
+  delete: "/api/Schedule",
 };

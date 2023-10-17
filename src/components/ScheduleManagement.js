@@ -1,167 +1,262 @@
-import React, { useState } from "react";
-import {
-  Table,
-  Pagination,
-  Modal,
-  Button,
-  Dropdown,
-  Form,
-} from "react-bootstrap";
-import { ToastContainer } from "react-toastify";
+import React, { useEffect, useState } from "react";
+import { getAxiosInstance } from "../utils/axios";
 import "react-toastify/dist/ReactToastify.css";
+import { Schedules} from "../utils/api";
+import ticket_icon from "../assets/icons/ticket-solid.svg";
+import { Table, Pagination, Dropdown, Modal, Button , Form  } from "react-bootstrap";
+import { ToastContainer, toast } from "react-toastify";
 
 const ScheduleManagement = () => {
-  const [schedules, setSchedules] = useState(mockSchedules);
+  const [token , setToken] = useState("")
+  const [schedules, setSchedules] = useState([]);
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [perPage, setPerPage] = useState(5);
+  const [perPage, setPerPage] = useState(8);
+
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [selectedScheduleForEdit, setSelectedScheduleForEdit] = useState(null);
+
   const [showModal, setShowModal] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [showCreateScheduleModal, setShowCreateScheduleModal] = useState(false);
+  const [showEditScheduleModal, setShowEditScheduleModal] = useState(false);
 
   const [scheduleInfo, setScheduleInfo] = useState({
-    route: "",
-    arrivalStation: "",
-    arrivalTime: "",
-    departureStation: "",
-    departureTime: "",
+    scheduleRoute: "",
+    scheduleLuxuryFare: 0,
+    scheduleEconomyFare: 0,
+    scheduleOperatingDays: [
+      0
+    ],
+    scheduleDepartureTime: "",
+    scheduleArrivalTime: ""
   });
 
+  const tostConfig = {
+    position: "top-right",
+    autoClose: 4000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+  }
+
+  useEffect(() => {
+    setToken(localStorage.getItem("token"))
+    getSchedules()
+  }, []);
+
+  const getSchedules = async () => {
+    //fetch the schedules
+    try {
+      const res = await getAxiosInstance().get(Schedules.getAll);
+      setSchedules(res.data.data);
+    } catch (error) {
+      const message = error.response
+        ? error.response.data.message
+        : "Unexpected error occurred. Please contact administrators.";
+      console.error(message);
+    }
+  };
+
+  const resetScheduleObj = ()=>{
+    setScheduleInfo({
+      scheduleRoute: "",
+      scheduleLuxuryFare: 0,
+      scheduleEconomyFare: 0,
+      scheduleOperatingDays: [
+        0
+      ],
+      scheduleDepartureTime: ``,
+      scheduleArrivalTime: ``
+    })
+  }
+
+  const handleCreateSchedule = async ()=>{
+    //handles creation of schedule  
+    scheduleInfo.scheduleDepartureTime = `2023-10-16T${scheduleInfo.scheduleDepartureTime}:29.707Z`
+    scheduleInfo.scheduleArrivalTime = `2023-10-16T${scheduleInfo.scheduleArrivalTime}:29.707Z`
+    try {
+      const res = await getAxiosInstance().post(Schedules.create,scheduleInfo,{
+        headers: { Authorization: `bearer ${token}` },
+      });
+      handleCloseSCreateScheduleModal()
+      resetScheduleObj()
+      await displayToast(res.data.message,res.data.success)
+    } catch (error) {
+      const message = error.response
+        ? error.response.data.message
+        : "Unexpected error occurred. Please contact administrators.";
+      console.error(message);
+    }
+  }
+
+  const handleUpdateSchedule =async () =>{
+    //updates schedule 
+    scheduleInfo.scheduleDepartureTime = `2023-10-16T${scheduleInfo.scheduleDepartureTime}:29.707Z`//formats input time
+    scheduleInfo.scheduleArrivalTime = `2023-10-16T${scheduleInfo.scheduleArrivalTime}:29.707Z`//formats input time
+    try {
+      const res = await getAxiosInstance().put(Schedules.update+"/"+selectedScheduleForEdit,scheduleInfo,{
+        headers: { Authorization: `bearer ${token}` },
+      });
+      handleCloseSCreateScheduleModal()
+      resetScheduleObj()
+      await displayToast(res.data.message,res.data.success)
+    } catch (error) {
+      const message = error.response
+        ? error.response.data.message
+        : "Unexpected error occurred. Please contact administrators.";
+      console.error(message);
+    }
+  }
+
+  const handleDelete = async (id)=>{
+    //handles deletion of schedule
+    try {
+      const res = await getAxiosInstance().delete(Schedules.delete+"/"+id);
+      const message = res.data.message
+      removeSchedule(id)
+      handleCloseModal()
+      await displayToast(res.data.message,res.data.success)
+    } catch (error) {
+      const message = error.response
+        ? error.response.data.message
+        : "Unexpected error occurred. Please contact administrators.";
+        await displayToast(message,false)
+    }
+  }
+
+  //handlers for open and close schedule info modal
   const handleRowClick = (schedule) => {
     setSelectedSchedule(schedule);
     setShowModal(true);
   };
-
   const handleCloseModal = () => {
     setSelectedSchedule(null);
     setShowModal(false);
   };
 
-  const handleCreateModal = () => {
-    setShowCreateModal(true);
+  //handlers for open and close create schedule modal
+  const handleCreateScheduleClick = () => {
+    setShowCreateScheduleModal(true);
+  };
+  const handleCloseSCreateScheduleModal = () => {
+    setShowCreateScheduleModal(false);
   };
 
-  const handleCloseCreateModal = () => {
-    setShowCreateModal(false);
+  //handlers for open and close edit schedule modal
+  const handleEditScheduleClick = (oldSchedule) => {
+    setSelectedScheduleForEdit(oldSchedule.id);
+    // Set the initial state for the scheduleInfo object
+    setScheduleInfo({
+      scheduleRoute: oldSchedule.route,
+      scheduleLuxuryFare: oldSchedule.luxuryFare,
+      scheduleEconomyFare: oldSchedule.economyFare,
+      scheduleOperatingDays: oldSchedule.operatingDays, 
+      scheduleDepartureTime: extractHoursMinutes(oldSchedule.departureTime),
+      scheduleArrivalTime: extractHoursMinutes(oldSchedule.arrivalTime),
+    });
+    setShowEditScheduleModal(true);
+  };
+  
+  const handleCloseSEditScheduleModal = () => {
+    setSelectedScheduleForEdit(null)
+    setShowEditScheduleModal(false);
+    resetScheduleObj()
   };
 
-  const handleEditModal = () => {
-    setShowEditModal(true);
+  const handleInputChange = (e) => {
+    //handler for onchange inputs
+    const { name, value } = e.target;
+    setScheduleInfo((prevScheduleInfo) => ({
+      ...prevScheduleInfo,
+      [name]: value
+    }));
   };
 
-  const handleCloseEditModal = () => {
-    setShowEditModal(false);
+  const removeSchedule = (scheduleIdToRemove) => {
+    //remove schedule from state upon deletion
+    const updatedSchedules = schedules.filter(schedule => schedule.id !== scheduleIdToRemove);
+    setSchedules(updatedSchedules);
   };
+  
+  const displayToast = async (message,success) => {
+    //display toast message
+    if(success){
+      toast.success(message, tostConfig);
+    }else{
+      toast.error(message,tostConfig)
+    }
+  }
 
-  const handleCreateSchedule = () => {
-    // Implement create schedule logic here
-    // For now, just close the modal
-    handleCloseCreateModal();
-  };
-
-  const handleEditSchedule = () => {
-    // Implement edit schedule logic here
-    // For now, just close the modal
-    handleCloseEditModal();
-  };
-
-  const renderTableRows = () => {
-    return schedules.map((schedule) => (
-      <tr key={schedule.id}>
-        <td onClick={() => handleRowClick(schedule)}>{schedule.route}</td>
-        <td onClick={() => handleRowClick(schedule)}>
-          {formatTimeWithAMPM(schedule.arrivalTime)}
-        </td>
-        <td onClick={() => handleRowClick(schedule)}>
-          {formatTimeWithAMPM(schedule.departureTime)}
-        </td>
-        {/* Add more columns as needed */}
-      </tr>
-    ));
-  };
-
-  const handlePaginationClick = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handlePerPageChange = (option) => {
-    setPerPage(option);
-  };
-
-  const displayScheduleInfo = () => {
-    const scheduleStyles = {
-      borderStyle: "solid",
-      borderRadius: "5px",
-      borderColor: "grey",
-      marginBottom: "5px",
-      padding: "10px",
-      borderWidth: "2px",
-      position: "relative",
-    };
-
+  const displayAddScheduleForm = () => {
+    //display add schedule modal form
     return (
-      <Modal show={showModal} onHide={handleCloseModal}>
+      <Modal show={showCreateScheduleModal} onHide={handleCloseSCreateScheduleModal}>
         <Modal.Header closeButton>
-          <Modal.Title>Schedule Information</Modal.Title>
+          <Modal.Title style={{ color: 'black' }}>Schedule Information</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          {selectedSchedule && (
-            <div>
-              <p>
-                <strong>Route:</strong> {selectedSchedule.route}
-              </p>
-              <p>
-                <strong>Arrival:</strong>{" "}
-                {`${selectedSchedule.arrivalStation} at ${formatTimeWithAMPM(
-                  selectedSchedule.arrivalTime
-                )}`}
-              </p>
-              <p>
-                <strong>Departure:</strong>{" "}
-                {`${selectedSchedule.departureStation} at ${formatTimeWithAMPM(
-                  selectedSchedule.departureTime
-                )}`}
-              </p>
-              {/* Add more properties as needed */}
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseModal}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    );
-  };
-
-  const displayCreateScheduleModal = () => {
-    return (
-      <Modal show={showCreateModal} onHide={handleCloseCreateModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>Create Schedule</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
+        <Modal.Body style={{color:'black'}}>
           <Form>
-            {/* Add form fields for creating a schedule */}
-            {/* Example: */}
             <Form.Group controlId="formRoute">
               <Form.Label>Route</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Enter route"
-                name="route"
-                value={scheduleInfo.route}
-                onChange={(e) =>
-                  setScheduleInfo({ ...scheduleInfo, route: e.target.value })
-                }
+                placeholder="Route name"
+                name="scheduleRoute"
+                value={scheduleInfo.scheduleRoute}
+                onChange={handleInputChange}
               />
             </Form.Group>
-            {/* Add more form fields as needed */}
+
+            <Form.Group controlId="formLuxuryFare">
+              <Form.Label>Luxury fare</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Luxury fare"
+                name="scheduleLuxuryFare"
+                value={scheduleInfo.scheduleLuxuryFare}
+                onChange={handleInputChange}
+              />
+            </Form.Group>
+
+            <Form.Group controlId="formEconomyFare">
+              <Form.Label>Economy fare</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Economy fare"
+                name="scheduleEconomyFare"
+                value={scheduleInfo.scheduleEconomyFare}
+                onChange={handleInputChange}
+              />
+            </Form.Group>
+
+            <Form.Group controlId="formArrivalTime">
+              <Form.Label>Arrival time</Form.Label>
+              <Form.Control
+                type="time"
+                placeholder="Arrival time"
+                name="scheduleArrivalTime"
+                value={scheduleInfo.scheduleArrivalTime}
+                onChange={handleInputChange}
+              />
+            </Form.Group>
+
+            <Form.Group controlId="formDepartureTime">
+              <Form.Label>Departure time</Form.Label>
+              <Form.Control
+                type="time"
+                placeholder="Departure time"
+                name="scheduleDepartureTime"
+                value={scheduleInfo.scheduleDepartureTime}
+                onChange={handleInputChange}s
+              />
+            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseCreateModal}>
+          <Button variant="secondary" onClick={handleCloseSCreateScheduleModal}>
             Close
           </Button>
           <Button variant="primary" onClick={handleCreateSchedule}>
@@ -172,139 +267,209 @@ const ScheduleManagement = () => {
     );
   };
 
-  const displayEditScheduleModal = () => {
-    return (
-      <Modal show={showEditModal} onHide={handleCloseEditModal}>
+  const displayScheduleInfo = ()=>{
+    //modal to display schedule info
+    return(
+      <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
-          <Modal.Title>Edit Schedule</Modal.Title>
+          <Modal.Title style={{ color: 'black' }}>Schedule Information</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          {selectedSchedule && (
+            <div style={{ color: 'black' }}>
+              <p><strong>Route:</strong> {selectedSchedule.route}</p>
+              <p><strong>Arrival station:</strong> {selectedSchedule.arrivalStation+" at "+extractHoursMinutes(selectedSchedule.arrivalTime)}</p>
+              <p><strong>Departure:</strong> {selectedSchedule.departureStation+" at "+extractHoursMinutes(selectedSchedule.departureTime)}</p>
+              <p><strong>Economy fare:</strong> {`LKR ${selectedSchedule.economyFare}` }</p>
+              <p><strong>Luxury fare:</strong> {`LKR ${selectedSchedule.luxuryFare}`}</p>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+        <Button variant="danger" onClick={()=>handleDelete(selectedSchedule.id)}>
+            Delete
+          </Button>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    )
+  }
+
+  const displayEdtScheduleForm = () => {
+    return (
+      <Modal show={showEditScheduleModal} onHide={handleCloseSEditScheduleModal}>
+        <Modal.Header closeButton>
+          <Modal.Title style={{ color: 'black' }}>Edit train information</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{color:'black'}}>
           <Form>
-            {/* Add form fields for editing a schedule */}
-            {/* Example: */}
             <Form.Group controlId="formRoute">
               <Form.Label>Route</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Enter route"
-                name="route"
-                value={scheduleInfo.route}
-                onChange={(e) =>
-                  setScheduleInfo({ ...scheduleInfo, route: e.target.value })
-                }
+                placeholder="Route name"
+                name="scheduleRoute"
+                value={scheduleInfo.scheduleRoute}
+                onChange={handleInputChange}
               />
             </Form.Group>
-            {/* Add more form fields as needed */}
+
+            <Form.Group controlId="formLuxuryFare">
+              <Form.Label>Luxury fare</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Luxury fare"
+                name="scheduleLuxuryFare"
+                value={scheduleInfo.scheduleLuxuryFare}
+                onChange={handleInputChange}
+              />
+            </Form.Group>
+
+            <Form.Group controlId="formEconomyFare">
+              <Form.Label>Economy fare</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Economy fare"
+                name="scheduleEconomyFare"
+                value={scheduleInfo.scheduleEconomyFare}
+                onChange={handleInputChange}
+              />
+            </Form.Group>
+
+            <Form.Group controlId="formArrivalTime">
+              <Form.Label>Arrival time</Form.Label>
+              <Form.Control
+                type="time"
+                placeholder="Arrival time"
+                name="scheduleArrivalTime"
+                value={scheduleInfo.scheduleArrivalTime}
+                onChange={handleInputChange}
+              />
+            </Form.Group>
+
+            <Form.Group controlId="formDepartureTime">
+              <Form.Label>Departure time</Form.Label>
+              <Form.Control
+                type="time"
+                placeholder="Departure time"
+                name="scheduleDepartureTime"
+                value={scheduleInfo.scheduleDepartureTime}
+                onChange={handleInputChange}s
+              />
+            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseEditModal}>
+          <Button variant="secondary" onClick={handleCloseSEditScheduleModal}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleEditSchedule}>
-            Save Changes
+          <Button variant="primary" onClick={handleUpdateSchedule} >
+            Edit Train
           </Button>
         </Modal.Footer>
       </Modal>
     );
   };
-
-  function formatTimeWithAMPM(datetimeString) {
-    const date = new Date(datetimeString);
-
-    if (isNaN(date)) {
-      return "Invalid Date";
+  
+  const renderTableRows = () => {
+    //body of shedule table  
+    return currentSchedules.map((schedule) => (
+      <tr key={schedule.id}>
+        <td onClick={() => handleRowClick(schedule)}>{schedule.route}</td>
+        <td onClick={() => handleRowClick(schedule)}>{schedule.arrivalStation}</td>
+        <td onClick={() => handleRowClick(schedule)}>{extractHoursMinutes(schedule.arrivalTime)}</td>
+        <td onClick={() => handleRowClick(schedule)}>{schedule.departureStation}</td>
+        <td onClick={() => handleRowClick(schedule)}>{extractHoursMinutes(schedule.departureTime)}</td>
+        <td onClick={() => handleRowClick(schedule)}>{`LKR ${schedule.luxuryFare}`}</td>
+        <td onClick={() => handleRowClick(schedule)}>{`LKR ${schedule.economyFare}`}</td>
+        <td className="justify-content-center">
+          <Button style={{marginLeft:'80px'}} variant="success" onClick={() => handleEditScheduleClick(schedule)}> Edit </Button>
+        </td>
+      </tr>
+    ));
+  };
+  
+  function extractHoursMinutes(inputString) {
+    //formats time output to hh:hh
+    const pattern = /\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}).*Z/;
+    const match = inputString.match(pattern);
+    if (match) {
+      const hoursMinutes = match[1];
+      return hoursMinutes;
+    } else {
+      return null; // Return null if no match is found
     }
-
-    const utcTimeString = date.toUTCString();
-    const timePart = utcTimeString.split(" ")[4];
-    return timePart.split(":")[0] + ":" + timePart.split(":")[1];
   }
+  
+  //pagination properties
+  const totalPages = Math.ceil(schedules.length / perPage);
+  const indexOfLastSchedule = currentPage * perPage;
+  const indexOfFirstSchedule = indexOfLastSchedule - perPage;
+  const currentSchedules = schedules.slice(indexOfFirstSchedule, indexOfLastSchedule);
 
   return (
     <div>
-      <div style={{ display: "flex", flexDirection: "row" }}>
-        <h2>Schedules</h2>
-        <Button
-          variant="success"
-          style={{ marginLeft: "auto" }}
-          onClick={handleCreateModal}
-        >
-          Create Schedule
-        </Button>
-        <Button variant="info" onClick={handleEditModal}>
-          Edit Schedule
-        </Button>
+      <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' , marginBottom:'10px'}}>
+        <h2 style={{ color: '#4F4F4F' }}>Schedules</h2>
+        <Button onClick={()=>handleCreateScheduleClick()}  variant="success" style={{ color: "white", marginRight: '67px' }}>Create</Button>
       </div>
-      <ToastContainer />
+      <ToastContainer/>
       <Table striped bordered hover>
         <thead>
           <tr>
             <th>Route</th>
-            <th>Arrival Time</th>
-            <th>Departure Time</th>
-            {/* Add more headers as needed */}
+            <th>Arrival</th>
+            <th>Time</th>
+            <th>Departure</th>
+            <th>Time</th>
+            <th>Luxury fare</th>
+            <th>Economy fare</th>
+            <th>Edit</th> 
           </tr>
         </thead>
         <tbody>{renderTableRows()}</tbody>
       </Table>
 
       <Pagination>
-        {Array.from({ length: Math.ceil(schedules.length / perPage) }).map(
-          (_, index) => (
-            <Pagination.Item
-              key={index + 1}
-              active={index + 1 === currentPage}
-              onClick={() => handlePaginationClick(index + 1)}
-            >
-              {index + 1}
-            </Pagination.Item>
-          )
-        )}
+        <Pagination.Prev
+          onClick={() => setCurrentPage(currentPage - 1)}
+          disabled={currentPage === 1}
+        />
+        {Array.from({ length: totalPages }).map((_, index) => (
+          <Pagination.Item
+            key={index + 1}
+            active={index + 1 === currentPage}
+            onClick={() => setCurrentPage(index + 1)}
+          >
+            {index + 1}
+          </Pagination.Item>
+        ))}
+        <Pagination.Next
+          onClick={() => setCurrentPage(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        />
       </Pagination>
-
+   
       <Dropdown>
         <Dropdown.Toggle variant="success" id="pagination-dropdown">
           Per Page: {perPage}
         </Dropdown.Toggle>
         <Dropdown.Menu>
-          {[5, 10, 15].map((option) => (
-            <Dropdown.Item
-              key={option}
-              onClick={() => handlePerPageChange(option)}
-            >
+          {[5, 8].map((option) => (
+            <Dropdown.Item key={option} onClick={() => setPerPage(option)}>
               {option}
             </Dropdown.Item>
           ))}
         </Dropdown.Menu>
       </Dropdown>
-
       {displayScheduleInfo()}
-      {displayCreateScheduleModal()}
-      {displayEditScheduleModal()}
+      {displayScheduleInfo()}
+      {displayAddScheduleForm()}
+      {displayEdtScheduleForm()}
     </div>
   );
 };
 
 export default ScheduleManagement;
-
-// Placeholder data for testing
-const mockSchedules = [
-  {
-    id: 1,
-    route: "Route 1",
-    arrivalStation: "Station A",
-    arrivalTime: "2023-10-13T10:00:00Z",
-    departureStation: "Station B",
-    departureTime: "2023-10-13T12:00:00Z",
-  },
-  {
-    id: 2,
-    route: "Route 2",
-    arrivalStation: "Station C",
-    arrivalTime: "2023-10-13T14:00:00Z",
-    departureStation: "Station D",
-    departureTime: "2023-10-13T16:00:00Z",
-  },
-  // Add more schedule objects as needed
-];
