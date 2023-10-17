@@ -2,31 +2,39 @@ import React, { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getAxiosInstance } from "../utils/axios";
-import { Auth } from "../utils/api";
+import { Auth, Users } from "../utils/api";
 import { useDispatch, useSelector } from 'react-redux';
 import { setToken } from '../redux/actions';
 
 const Login = () => {
   const [nic, setNic] = useState("");
   const [password, setPassword] = useState("");
+  const [user, setUser] = useState({});
   const dispatch = useDispatch();
  
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-
       if(nic==="" || password===""){
         displayToast("Please fill all the fields")
         return;
       }
-
       const res = await getAxiosInstance().post(Auth.login, {
         nic,
         password
       });
 
-      console.log(res.data.data,"Data")
+        const response = await getAxiosInstance().get(Users.getOne+"/"+nic);
+        const user = response.data.data;
+        console.log(user)
+        if(user.role === "TRAVELER"){
+          displayToast("Unauthorized access")
+          return
+        }
+      
+
       dispatch(setToken('LOGIN-TOKEN'));
+
       localStorage.setItem("isLogin", true);
       localStorage.setItem("token", res.data.data);
 
