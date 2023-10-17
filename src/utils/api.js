@@ -38,6 +38,22 @@ export const Trains = {
 
 export const Schedules = {
   getAll: "api/Schedule",
+  getOne: "api/Schedule",
+  create: "/api/Schedule",
+  update: "/api/Schedule",
+  delete: "/api/Schedule",
+};
+
+export const Reservations = {
+  getAll: "api/Reservation",
+  create: "/api/Reservation",
+  update: "/api/Reservation",
+  delete: "/api/Reservation",
+  complete: "/api/Reservation/complete",
+};
+
+export const Users = {
+  getAll: "api/User",
   create: "/api/Schedule",
   update: "/api/Schedule",
   delete: "/api/Schedule",

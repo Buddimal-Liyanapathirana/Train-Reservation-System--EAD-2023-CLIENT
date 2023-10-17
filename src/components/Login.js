@@ -3,11 +3,13 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getAxiosInstance } from "../utils/axios";
 import { Auth } from "../utils/api";
+import { useDispatch, useSelector } from 'react-redux';
+import { setToken } from '../redux/actions';
 
 const Login = () => {
   const [nic, setNic] = useState("");
   const [password, setPassword] = useState("");
-  
+  const dispatch = useDispatch();
  
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -23,10 +25,10 @@ const Login = () => {
         password
       });
 
-      console.log(res.data,"Data")
-
+      console.log(res.data.data,"Data")
+      dispatch(setToken('LOGIN-TOKEN'));
       localStorage.setItem("isLogin", true);
-      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("token", res.data.data);
 
       displayToast("Successfully logged in")
       window.location.href = '/';

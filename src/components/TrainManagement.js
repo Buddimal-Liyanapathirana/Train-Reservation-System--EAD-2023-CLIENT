@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { getAxiosInstance } from "../utils/axios";
 import "react-toastify/dist/ReactToastify.css";
 import { Schedules, Trains } from "../utils/api";
-import ticket_icon from "../assets/icons/ticket-solid.svg";
 import { Table, Pagination, Dropdown, Modal, Button , Form  } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
+import { useDispatch, useSelector } from 'react-redux';
 
 const TrainManagement = () => {
-  const [token , setToken] = useState("")
+  const loginToken = useSelector((state) => state.token);
   const [trains, setTrains] = useState([]);
   const [schedules, setSchedules] = useState([]);
 
@@ -41,7 +41,6 @@ const TrainManagement = () => {
   }
 
   useEffect(() => {
-    setToken(localStorage.getItem("token"))
     getTrains();
     getSchedules()
   }, []);
@@ -60,6 +59,9 @@ const TrainManagement = () => {
   };
 
   const handleCreateTrain = async ()=>{
+    //creates a train
+    const token = localStorage.getItem("token");
+    console.log(token)
     try {
       const res = await getAxiosInstance().post(Trains.create,trainInfo,{
         headers: { Authorization: `bearer ${token}` },
