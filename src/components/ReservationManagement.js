@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getAxiosInstance } from "../utils/axios";
 import { Reservations, Schedules, Trains, Users } from "../utils/api";
-import { Table, Modal, Button, Form } from "react-bootstrap";
+import { Table, Modal, Button, Form, Pagination, Dropdown } from "react-bootstrap";
 import {toastConfig} from "../utils/toastConfig";
 import { ToastContainer, toast } from "react-toastify";
 
@@ -10,6 +10,9 @@ const ReservationManagement = () => {
   const [travelers, setTravelers] = useState([]);
   const [trains, setTrains] = useState([]);
   const [schedule, setSchedule] = useState([]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(8);
 
   const [selectedReservation, setSelectedReservation] = useState(null);
 
@@ -45,8 +48,11 @@ const ReservationManagement = () => {
 
   const getReservations = async () => {
     //get all the reservations
+    const token = localStorage.getItem("token");
     try {
-      const res = await getAxiosInstance().get(Reservations.getAll);
+      const res = await getAxiosInstance().get(Reservations.getAll,{
+        headers: { Authorization: `bearer ${token}`},
+      });
       setReservations(res.data.data);
     } catch (error) {
       const message = error.response
@@ -57,8 +63,11 @@ const ReservationManagement = () => {
   };
 
   const getSchedule = async (schId) => {
+    const token = localStorage.getItem("token");
     try {
-      const res = await getAxiosInstance().get(Schedules.getOne+"/"+schId);
+      const res = await getAxiosInstance().get(Schedules.getOne+"/"+schId,{
+        headers: { Authorization: `bearer ${token}`},
+      });
       setSchedule(res.data.data);
     } catch (error) {
       const message = error.response
@@ -70,9 +79,12 @@ const ReservationManagement = () => {
   
 
   const getUsers = async () => {
+    const token = localStorage.getItem("token");
     //get all users and filter travelers and active users
     try {
-      const res = await getAxiosInstance().get(Users.getAll);
+      const res = await getAxiosInstance().get(Users.getAll,{
+        headers: { Authorization: `bearer ${token}`},
+      });
       const travelerUsers = res.data.data
       .filter((user) => user.role === "TRAVELER")
       .filter((user) => user.isActive === true);
@@ -86,9 +98,12 @@ const ReservationManagement = () => {
   };
 
   const getTrains = async () => {
+    const token = localStorage.getItem("token");
     //get all trains and filter active ones
     try {
-      const res = await getAxiosInstance().get(Trains.getAll);
+      const res = await getAxiosInstance().get(Trains.getAll,{
+        headers: { Authorization: `bearer ${token}`},
+      });
       const trains = res.data.data
       .filter((user) => user.isActive === true);
       setTrains(trains);
@@ -261,7 +276,7 @@ const ReservationManagement = () => {
   }
 
   const renderTableRows = () => {
-    return reservations.map((reservation) => (
+    return currentReservations.map((reservation) => (
       <tr key={reservation.id}>
         <td onClick={() => handleRowClick(reservation)}>
           {reservation.isCompleted ? "Completed" : "Not Completed"}
@@ -620,6 +635,12 @@ const ReservationManagement = () => {
     );
   };
 
+    //pagination properties
+    const totalPages = Math.ceil(reservations.length / perPage);
+    const indexOfLastSchedule = currentPage * perPage;
+    const indexOfFirstSchedule = indexOfLastSchedule - perPage;
+    const currentReservations = reservations.slice(indexOfFirstSchedule, indexOfLastSchedule);
+
 
   return (
     <div>
@@ -648,6 +669,38 @@ const ReservationManagement = () => {
         </thead>
         <tbody>{renderTableRows()}</tbody>
       </Table>
+
+      <div style={{display:"flex", flexDirection:'row'}}>
+      <Pagination style={{marginRight:'10px'}} >
+        <Pagination.Prev onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} />
+        {Array.from({ length: totalPages }).map((_, index) => (
+          <Pagination.Item
+            key={index + 1}
+            active={index + 1 === currentPage}
+            onClick={() => setCurrentPage(index + 1)}
+          >
+            {index + 1}
+          </Pagination.Item>
+        ))}
+        <Pagination.Next
+          onClick={() => setCurrentPage(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        />
+      </Pagination>
+
+      <Dropdown>
+        <Dropdown.Toggle variant="success" id="pagination-dropdown">
+          Per Page: {perPage}
+        </Dropdown.Toggle>
+        <Dropdown.Menu>
+          {[5, 8].map((option) => (
+            <Dropdown.Item key={option} onClick={() => setPerPage(option)}>
+              {option}
+            </Dropdown.Item>
+          ))}
+        </Dropdown.Menu>
+      </Dropdown>
+      </div>
     </div>
   );
 };

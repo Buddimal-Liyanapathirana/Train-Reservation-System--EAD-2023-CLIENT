@@ -49,8 +49,11 @@ const ScheduleManagement = () => {
 
   const getSchedules = async () => {
     //fetch the schedules
+    const token = localStorage.getItem("token");
     try {
-      const res = await getAxiosInstance().get(Schedules.getAll);
+      const res = await getAxiosInstance().get(Schedules.getAll,{
+        headers: { Authorization: `bearer ${token}` },
+      });
       setSchedules(res.data.data);
     } catch (error) {
       const message = error.response
@@ -75,6 +78,7 @@ const ScheduleManagement = () => {
 
   const handleCreateSchedule = async ()=>{
     //handles creation of schedule  
+    const token = localStorage.getItem("token");
     scheduleInfo.scheduleDepartureTime = `2023-10-16T${scheduleInfo.scheduleDepartureTime}:29.707Z`
     scheduleInfo.scheduleArrivalTime = `2023-10-16T${scheduleInfo.scheduleArrivalTime}:29.707Z`
     try {
@@ -94,6 +98,7 @@ const ScheduleManagement = () => {
 
   const handleUpdateSchedule =async () =>{
     //updates schedule 
+    const token = localStorage.getItem("token");
     scheduleInfo.scheduleDepartureTime = `2023-10-16T${scheduleInfo.scheduleDepartureTime}:29.707Z`//formats input time
     scheduleInfo.scheduleArrivalTime = `2023-10-16T${scheduleInfo.scheduleArrivalTime}:29.707Z`//formats input time
     try {
@@ -113,6 +118,7 @@ const ScheduleManagement = () => {
 
   const handleDelete = async (id)=>{
     //handles deletion of schedule
+    const token = localStorage.getItem("token");
     try {
       const res = await getAxiosInstance().delete(Schedules.delete+"/"+id);
       const message = res.data.message
@@ -432,7 +438,9 @@ const ScheduleManagement = () => {
         <tbody>{renderTableRows()}</tbody>
       </Table>
 
-      <Pagination>
+
+      <div style={{display:"flex", flexDirection:'row'}}>
+      <Pagination style={{marginRight:'10px'}} >
         <Pagination.Prev
           onClick={() => setCurrentPage(currentPage - 1)}
           disabled={currentPage === 1}
@@ -464,6 +472,7 @@ const ScheduleManagement = () => {
           ))}
         </Dropdown.Menu>
       </Dropdown>
+      </div>
       {displayScheduleInfo()}
       {displayScheduleInfo()}
       {displayAddScheduleForm()}

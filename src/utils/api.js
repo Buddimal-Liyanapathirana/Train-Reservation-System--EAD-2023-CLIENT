@@ -55,7 +55,9 @@ export const Reservations = {
 export const Users = {
   getAll: "api/User",
   getOne: "api/User",
-  create: "/api/Schedule",
-  update: "/api/Schedule",
-  delete: "/api/Schedule",
+  create: "/api/User",
+  update: "/api/User",
+  delete: "/api/User",
+  deactivate: "/api/User/deactivate",
+  activate: "/api/User/activate",
 };

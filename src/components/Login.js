@@ -3,14 +3,11 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getAxiosInstance } from "../utils/axios";
 import { Auth, Users } from "../utils/api";
-import { useDispatch, useSelector } from 'react-redux';
-import { setToken } from '../redux/actions';
 
 const Login = () => {
   const [nic, setNic] = useState("");
   const [password, setPassword] = useState("");
-  const [user, setUser] = useState({});
-  const dispatch = useDispatch();
+
  
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,17 +21,18 @@ const Login = () => {
         password
       });
 
-        const response = await getAxiosInstance().get(Users.getOne+"/"+nic);
-        const user = response.data.data;
-        console.log(user)
-        if(user.role === "TRAVELER"){
-          displayToast("Unauthorized access")
-          return
-        }
+      //fetch the user details for logged user
+      const response = await getAxiosInstance().get(Users.getOne+"/"+nic);
+      const user = response.data.data;
+      if(user.role === "TRAVELER"){
+        displayToast("Unauthorized access")
+        return
+      }
       
-
-      dispatch(setToken('LOGIN-TOKEN'));
-
+      //assign vitals to local storage
+      localStorage.setItem("UserName", user.name);
+      localStorage.setItem("UserNic", user.nic);
+      localStorage.setItem("UserRole", user.role);
       localStorage.setItem("isLogin", true);
       localStorage.setItem("token", res.data.data);
 

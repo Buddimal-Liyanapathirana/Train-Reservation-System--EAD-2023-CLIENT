@@ -7,7 +7,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { useDispatch, useSelector } from 'react-redux';
 
 const TrainManagement = () => {
-  const loginToken = useSelector((state) => state.token);
+
   const [trains, setTrains] = useState([]);
   const [schedules, setSchedules] = useState([]);
 
@@ -47,8 +47,11 @@ const TrainManagement = () => {
 
   const getTrains = async () => {
     //fetch the trains
+    const token = localStorage.getItem("token");
     try {
-      const res = await getAxiosInstance().get(Trains.getAll);
+      const res = await getAxiosInstance().get(Trains.getAll,{
+        headers: { Authorization: `bearer ${token}` },
+      });
       setTrains(res.data.data);
     } catch (error) {
       const message = error.response
@@ -61,7 +64,6 @@ const TrainManagement = () => {
   const handleCreateTrain = async ()=>{
     //creates a train
     const token = localStorage.getItem("token");
-    console.log(token)
     try {
       const res = await getAxiosInstance().post(Trains.create,trainInfo,{
         headers: { Authorization: `bearer ${token}` },
@@ -82,8 +84,12 @@ const TrainManagement = () => {
   }
 
   const handleEditTrain = async ()=>{
+    //updates a train
+    const token = localStorage.getItem("token");
     try {
-      const res = await getAxiosInstance().put(Trains.update+"/"+selectedTrainForEdit,trainInfo);
+      const res = await getAxiosInstance().put(Trains.update+"/"+selectedTrainForEdit,trainInfo,{
+        headers: { Authorization: `bearer ${token}` },
+      });
       handleCloseSEditTrainModal()
       setTrainInfo({
         trainName: "",
@@ -101,8 +107,11 @@ const TrainManagement = () => {
 
   const getSchedules = async () => {
     //fetch the schedules
+    const token = localStorage.getItem("token");
     try {
-      const res = await getAxiosInstance().get(Schedules.getAll);
+      const res = await getAxiosInstance().get(Schedules.getAll,{
+        headers: { Authorization: `bearer ${token}` },
+      });
       setSchedules(res.data.data);
     } catch (error) {
       const message = error.response
@@ -114,12 +123,16 @@ const TrainManagement = () => {
 
   const handleAddSchedule = async (scheduleId) => {
     //assigns schedule to trains
+    const token = await localStorage.getItem("token");
     try {
-      const res = await getAxiosInstance().put(Trains.addSchedule+"/"+selectedTrainForSchedule+"/"+scheduleId); 
+      const res = await getAxiosInstance().put(Trains.addSchedule+"/"+selectedTrainForSchedule+"/"+scheduleId,{
+        headers: { Authorization: `bearer ${token}` },
+      }); 
       updateTrain(selectedTrainForSchedule,true)
       handleCloseScheduleModal()
       await displayToast(res.data.message,res.data.success)
     } catch (error) {
+      console.log(error)
       const message = error.response
         ? error.response.data.message
         : "Unexpected error occurred. Please contact administrators.";
@@ -129,11 +142,13 @@ const TrainManagement = () => {
 
   const handleDelete = async (id)=>{
     //handles deletion of train
+    const token = localStorage.getItem("token");
     try {
-      const res = await getAxiosInstance().delete(Trains.delete+"/"+id);
-      const message = res.data.message
-      removeTrain(id)
+      const res = await getAxiosInstance().delete(Trains.delete+"/"+id,{
+        headers: { Authorization: `bearer ${token}` },
+      });
       handleCloseModal()
+      removeTrain(id)
       await displayToast(res.data.message,res.data.success)
     } catch (error) {
       const message = error.response
@@ -145,8 +160,11 @@ const TrainManagement = () => {
 
   const handleDeactivate = async (id)=>{
     //handles deactivation of train
+    const token = localStorage.getItem("token");
     try {
-      const res = await getAxiosInstance().put(Trains.deactivate+"/"+id);
+      const res = await getAxiosInstance().put(Trains.deactivate+"/"+id,{
+        headers: { Authorization: `bearer ${token}` },
+      });
       updateTrain(id,false)
       handleCloseModal()
       await displayToast(res.data.message,res.data.success)
@@ -398,7 +416,6 @@ const TrainManagement = () => {
               <p><strong>Route:</strong> {schedule.route}</p>
               <p><strong>Arrival:</strong> {schedule.arrivalStation + ` at ${formatTimeWithAMPM(schedule.arrivalTime)}`}</p>
               <p><strong>Departure:</strong> {schedule.departureStation + ` at ${formatTimeWithAMPM(schedule.departureTime)}`}</p>
-              {/* Add more properties as needed */}
             </div>
           ))}
         </Modal.Body>
@@ -481,7 +498,8 @@ const TrainManagement = () => {
         <tbody>{renderTableRows()}</tbody>
       </Table>
 
-      <Pagination>
+      <div style={{display:"flex", flexDirection:'row'}}>
+      <Pagination style={{marginRight:'10px'}} >
         <Pagination.Prev
           onClick={() => setCurrentPage(currentPage - 1)}
           disabled={currentPage === 1}
@@ -513,6 +531,7 @@ const TrainManagement = () => {
           ))}
         </Dropdown.Menu>
       </Dropdown>
+      </div>
       {displayTrainInfo()}
       {displayScheduleInfo()}
       {displayAddTrainForm()}
