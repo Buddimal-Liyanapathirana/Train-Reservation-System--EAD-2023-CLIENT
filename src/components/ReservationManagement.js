@@ -339,7 +339,7 @@ const ReservationManagement = () => {
           {formatDate(reservation.reservedOn)}
         </td>
         <td>
-          <Button variant="success" onClick={() => handleRowEditClick(reservation)}>
+          <Button disabled={reservation.isCompleted} variant="success" onClick={() => handleRowEditClick(reservation)}>
             Edit
           </Button>
         </td>
@@ -394,7 +394,7 @@ const ReservationManagement = () => {
           <Button variant="danger" onClick={handleDeleteReservation}>
             Delete
           </Button>
-          <Button variant="success" onClick={handleCompleteReservation}>
+          <Button disabled={selectedReservation&& selectedReservation.isCompleted} variant="success" onClick={handleCompleteReservation}>
             Complete
           </Button>
         </Modal.Footer>
@@ -697,6 +697,7 @@ const ReservationManagement = () => {
           <Form.Control
             as="select"
             name="isCompletedFilter"
+            placeholder="Status"
             value={filterValue}
             onChange={handleFilterChange}
           >
