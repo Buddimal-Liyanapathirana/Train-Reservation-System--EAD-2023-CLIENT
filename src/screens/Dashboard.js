@@ -10,6 +10,7 @@ import ReservationManagement from "../components/ReservationManagement";
 import TrainManagement from "../components/TrainManagement";
 import ScheduleManagement from "../components/ScheduleManagement";
 import Profile from "../components/Profile";
+import RouteManagement from "../components/RouteManagement";
 
 
 const Dashboard = () => {
@@ -19,6 +20,7 @@ const Dashboard = () => {
     const [isTrainManagementSelected, setIsTrainManagementSelected]=useState(false)
     const [isScheduleManagementSelected, setIsScheduleManagementSelected]=useState(false)
     const [isProfileSelected, setIsProfileSelected]=useState(false)
+    const [isRouteManagementSelected, setIsRouteManagementSelected]=useState(false)
     
   return (
     <div style={{ display: "flex", width: "100%" }}>
@@ -33,6 +35,7 @@ const Dashboard = () => {
             setIsTrainManagementSelected(false);
             setIsScheduleManagementSelected(false);
             setIsProfileSelected(false);
+            setIsRouteManagementSelected(false);
           }}
         >
           <img width={20} src={dashboard_icon} />
@@ -50,6 +53,7 @@ const Dashboard = () => {
             setIsTrainManagementSelected(false);
             setIsScheduleManagementSelected(false);
             setIsProfileSelected(false);
+            setIsRouteManagementSelected(false);
           }}
         >
           <img width={20} src={user_icon} />
@@ -68,6 +72,7 @@ const Dashboard = () => {
             setIsTrainManagementSelected(false);
             setIsScheduleManagementSelected(false);
             setIsProfileSelected(false);
+            setIsRouteManagementSelected(false);
           }}
         >
           <img width={20} src={ticket_icon} />
@@ -86,6 +91,7 @@ const Dashboard = () => {
             setIsTrainManagementSelected(true);
             setIsScheduleManagementSelected(false);
             setIsProfileSelected(false);
+            setIsRouteManagementSelected(false);
           }}
         >
           <img width={20} src={train_icon} />
@@ -104,11 +110,31 @@ const Dashboard = () => {
             setIsTrainManagementSelected(false);
             setIsScheduleManagementSelected(true);
             setIsProfileSelected(false);
+            setIsRouteManagementSelected(false);
           }}
         >
           <img width={20} src={track_icon} />
 
           <div className="nav_text">Schedule Management</div>
+        </div>
+
+        <div
+          className={
+            isRouteManagementSelected ? "nav_item_selected" : "nav_item"
+          }
+          onClick={() => {
+            setIsHomeSelected(false);
+            setIsUserManagementSelected(false);
+            setIsReservationManagementSelected(false);
+            setIsTrainManagementSelected(false);
+            setIsScheduleManagementSelected(false);
+            setIsProfileSelected(false);
+            setIsRouteManagementSelected(true);
+          }}
+        >
+          <img width={20} src={track_icon} />
+
+          <div className="nav_text">Route Management</div>
         </div>
 
         <div
@@ -120,6 +146,7 @@ const Dashboard = () => {
             setIsTrainManagementSelected(false);
             setIsScheduleManagementSelected(false);
             setIsProfileSelected(true);
+            setIsRouteManagementSelected(false);
           }}
         >
           <img width={20} src={dashboard_icon} />
@@ -133,6 +160,7 @@ const Dashboard = () => {
         {isTrainManagementSelected && <TrainManagement />}
         {isScheduleManagementSelected && <ScheduleManagement />}
         {isProfileSelected && <Profile />}
+        {isRouteManagementSelected && <RouteManagement />}
       </div>
     </div>
   );

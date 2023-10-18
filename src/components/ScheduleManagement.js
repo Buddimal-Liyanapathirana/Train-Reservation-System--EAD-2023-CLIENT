@@ -104,6 +104,7 @@ const ScheduleManagement = () => {
     try {
       const res = await getAxiosInstance().put(Schedules.update+"/"+selectedScheduleForEdit,scheduleInfo,{
         headers: { Authorization: `bearer ${token}` },
+        
       });
       handleCloseSCreateScheduleModal()
       resetScheduleObj()
@@ -274,6 +275,7 @@ const ScheduleManagement = () => {
   };
 
   const displayScheduleInfo = ()=>{
+    const role = localStorage.getItem("UserRole")
     //modal to display schedule info
     return(
       <Modal show={showModal} onHide={handleCloseModal}>
@@ -292,9 +294,9 @@ const ScheduleManagement = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-        <Button variant="danger" onClick={()=>handleDelete(selectedSchedule.id)}>
+        {role==="BACK_OFFICER" && <Button variant="danger" onClick={()=>handleDelete(selectedSchedule.id)}>
             Delete
-          </Button>
+          </Button>}
           <Button variant="secondary" onClick={handleCloseModal}>
             Close
           </Button>
@@ -390,9 +392,9 @@ const ScheduleManagement = () => {
         <td onClick={() => handleRowClick(schedule)}>{extractHoursMinutes(schedule.departureTime)}</td>
         <td onClick={() => handleRowClick(schedule)}>{`LKR ${schedule.luxuryFare}`}</td>
         <td onClick={() => handleRowClick(schedule)}>{`LKR ${schedule.economyFare}`}</td>
-        <td className="justify-content-center">
+        {localStorage.getItem("UserRole")==="BACK_OFFICER"&&<td className="justify-content-center">
           <Button style={{marginLeft:'80px'}} variant="success" onClick={() => handleEditScheduleClick(schedule)}> Edit </Button>
-        </td>
+        </td>}
       </tr>
     ));
   };
@@ -419,7 +421,10 @@ const ScheduleManagement = () => {
     <div>
       <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' , marginBottom:'10px'}}>
         <h2 style={{ color: '#4F4F4F' }}>Schedules</h2>
-        <Button onClick={()=>handleCreateScheduleClick()}  variant="success" style={{ color: "white", marginRight: '67px' }}>Create</Button>
+        {localStorage.getItem("UserRole")==="BACK_OFFICER"&&
+        <Button onClick={()=>handleCreateScheduleClick()}  variant="success" style={{ color: "white", marginRight: '67px' }}>
+          Create
+        </Button>}
       </div>
       <ToastContainer/>
       <Table striped bordered hover>
@@ -432,7 +437,7 @@ const ScheduleManagement = () => {
             <th>Time</th>
             <th>Luxury fare</th>
             <th>Economy fare</th>
-            <th>Edit</th> 
+            {localStorage.getItem("UserRole")==="BACK_OFFICER"&&<th>Edit</th> }
           </tr>
         </thead>
         <tbody>{renderTableRows()}</tbody>

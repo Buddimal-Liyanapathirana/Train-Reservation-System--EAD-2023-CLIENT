@@ -127,6 +127,7 @@ const TrainManagement = () => {
     try {
       const res = await getAxiosInstance().put(Trains.addSchedule+"/"+selectedTrainForSchedule+"/"+scheduleId,{
         headers: { Authorization: `bearer ${token}` },
+        'Access-Control-Allow-Origin': '*'
       }); 
       updateTrain(selectedTrainForSchedule,true)
       handleCloseScheduleModal()
@@ -368,6 +369,7 @@ const TrainManagement = () => {
   };
 
   const displayTrainInfo = ()=>{
+    const role = localStorage.getItem("UserRole");
     //modal to display train info
     return(
       <Modal show={showModal} onHide={handleCloseModal}>
@@ -387,12 +389,12 @@ const TrainManagement = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-        <Button variant="warning" onClick={()=>handleDeactivate(selectedTrain.id)}>
+          {role && role==="BACK_OFFICER" &&<Button variant="warning" onClick={()=>handleDeactivate(selectedTrain.id)}>
             Deactivate
-          </Button>
-        <Button variant="danger" onClick={()=>handleDelete(selectedTrain.id)}>
+          </Button>}
+          {role && role==="BACK_OFFICER" &&<Button variant="danger" onClick={()=>handleDelete(selectedTrain.id)}>
             Delete
-          </Button>
+          </Button>}
           <Button variant="secondary" onClick={handleCloseModal}>
             Close
           </Button>
@@ -429,6 +431,7 @@ const TrainManagement = () => {
   };
   
   const renderTableRows = () => {
+    const role = localStorage.getItem("UserRole");
     return currentTrains.map((train) => (
       <tr key={train.id}>
         <td onClick={() => handleRowClick(train)}>{train.trainName}</td>
@@ -447,12 +450,12 @@ const TrainManagement = () => {
           ></span>
           {train.isActive ? "Active" : "Inactive"}
         </td>
-        <td className="justify-content-center">
+        {role && role==="BACK_OFFICER" && <td className="justify-content-center">
           <Button style={{marginLeft:'80px'}} variant="success" onClick={() => handleAddScheduleClick(train.id)}> + </Button>
-        </td>
-        <td className="justify-content-center">
+        </td>}
+        {role && role==="BACK_OFFICER" && <td className="justify-content-center">
           <Button style={{marginLeft:'80px'}} variant="success" onClick={() => handleEditTrainClick(train)}> Edit </Button>
-        </td>
+        </td>}
       </tr>
     ));
   };
@@ -478,10 +481,14 @@ const TrainManagement = () => {
   const currentTrains = trains.slice(indexOfFirstTrain, indexOfLastTrain);
 
   return (
+    
     <div>
       <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' , marginBottom:'10px'}}>
         <h2 style={{ color: '#4F4F4F' }}>Trains</h2>
-        <Button onClick={()=>handleCreateTrainClick()}  variant="success" style={{ color: "white", marginRight: '67px' }}>Create</Button>
+        {localStorage.getItem("UserRole")==="BACK_OFFICER" &&
+          <Button onClick={()=>handleCreateTrainClick()}  variant="success" style={{ color: "white", marginRight: '67px' }}>
+            Create
+          </Button>}
       </div>
       <ToastContainer/>
       <Table striped bordered hover>
@@ -491,8 +498,8 @@ const TrainManagement = () => {
             <th>Luxury Seats</th>
             <th>Economy Seats</th>
             <th>Status</th>
-            <th className="d-flex justify-content-center">Schedule</th> 
-            <th>Edit</th> 
+            {localStorage.getItem("UserRole")==="BACK_OFFICER" &&<th className="d-flex justify-content-center">Schedule</th> }
+            {localStorage.getItem("UserRole")==="BACK_OFFICER" &&<th>Edit</th> }
           </tr>
         </thead>
         <tbody>{renderTableRows()}</tbody>

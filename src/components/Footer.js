@@ -3,7 +3,7 @@ import React from "react";
 const Footer = () => {
   return (
     <footer
-      style={{ width: "100%" }}
+      style={{ width: "100%" , height:'50px'}}
       className="bg-dark text-center text-white position-fixed bottom-0"
     >
       <div

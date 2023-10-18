@@ -30,7 +30,7 @@ const Login = () => {
       }
       
       //assign vitals to local storage
-      localStorage.setItem("UserName", user.name);
+      localStorage.setItem("UserName", user.userName);
       localStorage.setItem("UserNic", user.nic);
       localStorage.setItem("UserRole", user.role);
       localStorage.setItem("isLogin", true);

@@ -12,7 +12,6 @@ const Header = () => {
     imagePath: "https://www.w3schools.com/howto/img_avatar.png",
   }
 
-
   const handleLogout=()=>{
     localStorage.removeItem("isLogin");
     localStorage.removeItem("token");
@@ -63,10 +62,10 @@ const Header = () => {
                         width={30}
                         className="profile_image"
                       ></img>
-                      {user.name}
+                      {localStorage.getItem("UserName")}
                     </a>
-                    <ul className="dropdown-menu dropdown-menu-end dropdown-menu-lg-start">
-                      <li>
+                    <ul className="dropdown-menu dropdown-menu-start dropdown-menu-lg-start" >
+                      <li style={{width:'50px'}}>
                         <a className="dropdown-item" href="/profile">
                           Profile
                         </a>
@@ -74,7 +73,7 @@ const Header = () => {
                       <li>
                         <hr className="dropdown-divider" />
                       </li>
-                      <li>
+                      <li style={{width:'50px'}}>
                         <div onClick={handleLogout} className="dropdown-item logout">
                           <i className="fa fa-sign-out"></i>
                           Logout

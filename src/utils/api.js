@@ -61,3 +61,11 @@ export const Users = {
   deactivate: "/api/User/deactivate",
   activate: "/api/User/activate",
 };
+
+export const Routes = {
+  getAll: "api/Route",
+  getOne: "api/Route",
+  create: "/api/Route",
+  update: "/api/Route",
+  delete: "/api/Route",
+};

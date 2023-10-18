@@ -65,11 +65,14 @@ const UserManagement = () => {
   const getUsers = async () => {
     // Fetch users from the server
     const token = localStorage.getItem("token");
+    const role = localStorage.getItem("UserRole");
     try {
       const res = await getAxiosInstance().get(Users.getAll, {
         headers: { Authorization: `bearer ${token}` },
       });
-      setUsers(res.data.data);
+      const users = res.data.data;
+      const filteredUsers = filterUsers(users,role)
+      setUsers(filteredUsers);
     } catch (error) {
       const message = error.response
         ? error.response.data.message
@@ -77,6 +80,16 @@ const UserManagement = () => {
       console.error(message);
     }
   };
+
+  const filterUsers = (users, role) => {
+    const normalUsers = users.filter(user => user.role !== "SUPER_USER")
+    if(role === "SUPER_USER"){
+      return normalUsers
+    }else{
+      return normalUsers.filter(user => user.role === "TRAVELER")
+    }
+
+  }
 
   const handleCreateUser = async () => {
     if(!validateInputs()){
