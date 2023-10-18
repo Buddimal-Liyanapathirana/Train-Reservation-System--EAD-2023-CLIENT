@@ -13,7 +13,8 @@ const ReservationManagement = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(8);
-
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterValue, setFilterValue] = useState("");
   const [selectedReservation, setSelectedReservation] = useState(null);
 
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -212,6 +213,20 @@ const ReservationManagement = () => {
     setShowEditModal(true)
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+  
+
+  const handleFilterChange = (e) => {
+    const { value } = e.target;
+    setFilterValue(value);
+    // Call the function to filter reservations based on the new value
+    filterReservations(value);
+  };
+  
+  
+
   const handleCloseEditModal = () => { 
     //handles close edit modal
     setShowEditModal(false);
@@ -266,6 +281,20 @@ const ReservationManagement = () => {
     }));
   };
 
+  const filterReservations = (filterValue) => {
+    if (filterValue === "") {
+      return currentReservations;
+    } else if (filterValue === "completed") {
+      return currentReservations.filter((reservation) => reservation.isCompleted);
+    } else if (filterValue === "notCompleted") {
+      return currentReservations.filter((reservation) => !reservation.isCompleted);
+    }
+  
+    // Default case, return all reservations
+    return currentReservations;
+  };
+  
+
   const displayToast = async (message,success) => {
     //display toast message
     if(success){
@@ -276,10 +305,20 @@ const ReservationManagement = () => {
   }
 
   const renderTableRows = () => {
-    return currentReservations.map((reservation) => (
+    // Filter reservations based on the search query
+    const filteredReservations1 = filterReservations(filterValue);
+
+    const filteredReservations = filteredReservations1
+      .filter((reservation) =>reservation.userNIC.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  
+    return filteredReservations.map((reservation) => (
       <tr key={reservation.id}>
         <td onClick={() => handleRowClick(reservation)}>
           {reservation.isCompleted ? "Completed" : "Not Completed"}
+        </td>
+        <td onClick={() => handleRowClick(reservation)}>
+          {reservation.userNIC}
         </td>
         <td onClick={() => handleRowClick(reservation)}>
           {`LKR ${reservation.totalFare}`}
@@ -307,6 +346,7 @@ const ReservationManagement = () => {
       </tr>
     ));
   };
+  
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -409,14 +449,16 @@ const ReservationManagement = () => {
                 as="select"
                 name="startStation"
                 value={editFormData.startStation}
-                onChange={handleEditFormChange}  
+                onChange={handleEditFormChange}
               >
                 <option value="">Select a station</option>
-                {schedule && schedule.stopStations && schedule.stopStations.map((station) => (
-                  <option key={station} value={station}>
-                    {station}
-                  </option>
-                ))}
+                {schedule &&
+                  schedule.stopStations &&
+                  schedule.stopStations.map((station) => (
+                    <option key={station} value={station}>
+                      {station}
+                    </option>
+                  ))}
               </Form.Control>
             </Form.Group>
 
@@ -432,7 +474,7 @@ const ReservationManagement = () => {
                 {schedule &&
                   schedule.stopStations &&
                   schedule.stopStations
-                    .filter((station) => station > editFormData.startStation)
+                    .filter((station, index) => index > schedule.stopStations.indexOf(editFormData.startStation))
                     .map((station) => (
                       <option key={station} value={station}>
                         {station}
@@ -440,18 +482,17 @@ const ReservationManagement = () => {
                     ))}
               </Form.Control>
             </Form.Group>
-
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseEditModal}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleEditSubmit}>
-            Save Changes
-          </Button>
-        </Modal.Footer>
-      </Modal>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleCloseEditModal}>
+              Close
+            </Button>
+            <Button variant="primary" onClick={handleEditSubmit}>
+              Save Changes
+            </Button>
+          </Modal.Footer>
+        </Modal>
     );
   };
 
@@ -497,45 +538,48 @@ const ReservationManagement = () => {
              </div>
             </Form.Group>
 
-            <Form.Group controlId="formStartStation">
-              <Form.Label>Start Station</Form.Label>
-              <Form.Control
-                as="select"
-                name="startStation"
-                value={createFormData.startStation}
-                onChange={handleCreateFormChange}
-                disabled={createFormData.trainId?false:true}     
-              >
-                <option value="">Select a station</option>
-                {schedule && schedule.stopStations && schedule.stopStations.map((station) => (
+          <Form.Group controlId="formStartStation">
+            <Form.Label>Start Station</Form.Label>
+            <Form.Control
+              as="select"
+              name="startStation"
+              value={createFormData.startStation}
+              onChange={handleCreateFormChange}
+              disabled={createFormData.trainId ? false : true}
+            >
+              <option value="">Select a station</option>
+              {schedule &&
+                schedule.stopStations &&
+                schedule.stopStations.map((station) => (
                   <option key={station} value={station}>
                     {station}
                   </option>
                 ))}
-              </Form.Control>
-            </Form.Group>
+            </Form.Control>
+          </Form.Group>
 
-            <Form.Group controlId="formEndStation">
-              <Form.Label>End Station</Form.Label>
-              <Form.Control
-                as="select"
-                name="endStation"
-                value={createFormData.endStation}
-                onChange={handleCreateFormChange}
-                disabled={!createFormData.startStation}
-              >
-                <option value="">Select a station</option>
-                {schedule &&
-                  schedule.stopStations &&
-                  schedule.stopStations
-                    .filter((station) => station > createFormData.startStation) // Filter stations after the selected start station
-                    .map((station) => (
-                      <option key={station} value={station}>
-                        {station}
-                      </option>
-                    ))}
-              </Form.Control>
-            </Form.Group>
+          <Form.Group controlId="formEndStation">
+            <Form.Label>End Station</Form.Label>
+            <Form.Control
+              as="select"
+              name="endStation"
+              value={createFormData.endStation}
+              onChange={handleCreateFormChange}
+              disabled={!createFormData.startStation}
+            >
+              <option value="">Select a station</option>
+              {schedule &&
+                schedule.stopStations &&
+                schedule.stopStations
+                  .filter((station, index) => index > schedule.stopStations.indexOf(createFormData.startStation))
+                  .map((station) => (
+                    <option key={station} value={station}>
+                      {station}
+                    </option>
+                  ))}
+            </Form.Control>
+          </Form.Group>
+
 
             <Form.Group controlId="formLuxurySeats">
               <Form.Label>Luxury Seats</Form.Label>
@@ -647,7 +691,33 @@ const ReservationManagement = () => {
        <ToastContainer/>
       <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' , marginBottom:'10px'}}>
         <h2 style={{ color: "#4F4F4F" }}>Reservations</h2>
-        <Button onClick={()=>setShowCreateModal(true)}  variant="success" style={{ color: "white", marginRight: '50px' }}>Create</Button>
+        <div style={{ display: 'flex', flexDirection: 'row'}}>
+
+        <Form.Group controlId="formIsCompletedFilter" style={{marginTop:'5px'}}>
+          <Form.Control
+            as="select"
+            name="isCompletedFilter"
+            value={filterValue}
+            onChange={handleFilterChange}
+          >
+            <option value="">All</option>
+            <option value="completed">Completed</option>
+            <option value="notCompleted">Not Completed</option>
+          </Form.Control>
+        </Form.Group>
+
+        <Form.Group controlId="formSearcibyNIC" style={{marginTop:'5px',marginLeft:'5px'}}>
+          <Form.Control
+            type="text"
+            placeholder="NIC"
+            name="searchQuery"
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+        </Form.Group>
+        <Button onClick={()=>setShowCreateModal(true)}  variant="success" style={{ marginLeft:'10px', color: "white", marginRight: '50px' }}>Create</Button>
+        </div>
+      
       </div>
       {displayReservationInfo()}
       {displayEditForm()}
@@ -658,6 +728,7 @@ const ReservationManagement = () => {
         <thead>
           <tr>
             <th>Status</th>
+            <th>User</th>
             <th>Total Fare</th>
             <th>Economy Seats</th>
             <th>Luxury Seats</th>

@@ -156,9 +156,9 @@ const RouteManagement = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="danger" onClick={() => handleDelete(selectedRoute.name)}>
+          {localStorage.getItem("UserRole")==="BACK_OFFICER" &&<Button variant="danger" onClick={() => handleDelete(selectedRoute.name)}>
             Delete
-          </Button>
+          </Button>}
           <Button variant="secondary" onClick={handleCloseModal}>
             Close
           </Button>
@@ -260,9 +260,9 @@ const RouteManagement = () => {
         <td onClick={() => handleRowClick(route)}>{route.name}</td>
         <td onClick={() => handleRowClick(route)}>{route.stations.join(", ")}</td>
         <td className="justify-content-center">
-          <Button variant="success" onClick={() => handleEditRouteClick(route)}>
+          {localStorage.getItem("UserRole")==="BACK_OFFICER" &&<Button variant="success" onClick={() => handleEditRouteClick(route)}>
             Edit
-          </Button>
+          </Button>}
         </td>
       </tr>
     ));
@@ -291,9 +291,9 @@ const RouteManagement = () => {
     <div>
       <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", marginBottom: "10px" }}>
         <h2 style={{ color: "#4F4F4F" }}>Routes</h2>
-        <Button onClick={() => handleCreateRouteClick()} variant="success" style={{ color: "white", marginRight: "67px" }}>
+        {localStorage.getItem("UserRole")==="BACK_OFFICER" &&<Button onClick={() => handleCreateRouteClick()} variant="success" style={{ color: "white", marginRight: "67px" }}>
           Create
-        </Button>
+        </Button>}
       </div>
       <ToastContainer />
       <Table striped bordered hover>
@@ -301,7 +301,7 @@ const RouteManagement = () => {
           <tr>
             <th>Name</th>
             <th>Stations</th>
-            <th>Edit</th>
+            {localStorage.getItem("UserRole")==="BACK_OFFICER" &&<th>Edit</th>}
           </tr>
         </thead>
         <tbody>{renderTableRows()}</tbody>
